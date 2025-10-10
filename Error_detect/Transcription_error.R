@@ -599,61 +599,6 @@ totalminbase <- function(after_error,before_error){
   length(after_error[,1])*4+length(before_error[,1])*4
 }
 #error_trand
-error_trand <- function(sum_errorbase,changeerror,c){
-  ttt <- rbind(colnames(sum_errorbase),sum_errorbase)
-  tt <- matrix(0,nrow = nrow(sum_errorbase)+1,ncol = ncol(ttt))
-  rownames(tt) <- rownames(ttt)
-  k <- 0
-  for(i in seq(1,ncol(sum_errorbase)))
-  {
-    if(ttt[2,i]=="G")
-    {tt[,k] <- ttt[,i];k <- k+1}
-  }
-  colnames(tt) <- tt[1,]
-  tt <- as.matrix(tt[-1,])
-  if(sum(as.numeric(tt[2,]))==0)
-  {CU <- 0}else{CU <- sum(as.numeric(tt[2,]))/length(which(as.numeric(tt[2,])!=0))}
-  tt <- matrix(0,nrow = nrow(sum_errorbase)+1,ncol = ncol(ttt))
-  rownames(tt) <- rownames(ttt)
-  k <- 0
-  for(i in seq(1,ncol(sum_errorbase)))
-  {
-    if(ttt[2,i]=="C")
-    {tt[,k] <- ttt[,i];k <- k+1}
-  }
-  colnames(tt) <- tt[1,]
-  tt <- as.matrix(tt[-1,])
-  if(sum(as.numeric(tt[5,]))==0)
-  {GA <- 0}else{GA <- sum(as.numeric(tt[5,]))/length(which(as.numeric(tt[5,])!=0))}
-  for(i in seq(2,5))
-  {
-    trend_loc <- which(sum_errorbase[i,]!=0)
-    if(length(trend_loc) > 0)
-    {
-      for(j in seq(1,length(trend_loc)))
-      {
-        k <- trend_loc[[j]]
-        base1 <- sum_errorbase[1,k]
-        base2 <- rownames(sum_errorbase)[[i]]
-        bases <- paste(base1,base2,sep = "-")
-        if(bases %in% c("T-C","C-T","A-G"))
-        {
-          if(as.numeric(sum_errorbase[i,k])>CU)
-          {sum_errorbase[i,k] <- 0}
-        }
-        if(bases %in% c("T-G","T-A","G-T","G-C","C-G","C-A","A-T","A-C"))
-        {
-          if(as.numeric(sum_errorbase[i,k])>GA)
-          {sum_errorbase[i,k] <- 0}
-        }
-        tran_loc <- which(changeerror$transfer==bases)
-        changeerror[tran_loc,c+1] <- as.numeric(changeerror[tran_loc,c+1])+as.numeric(sum_errorbase[i,k])
-      }
-    }
-    change_error <- as.numeric(changeerror[,c+1])
-  }
-  return(change_error)
-}
 codon_matrix <- function(sum_errorbase,changecodon,c,gene_bed_4,exon_start){
   codon <- expand.grid(
     a = c("A","G","C","T"),
@@ -757,11 +702,8 @@ errorloc <- function(sum_errorbase,geneid,exonloc){
   return(gene_errorloc)
 }
 
-changeerror <- matrix(0,nrow = 12,ncol = length(gene_file[,1]))
-rownames(changeerror) <- c("A-C","A-G","A-U","C-A","C-G","C-U","G-A","G-C","G-U","U-A","U-C","U-G")
-colnames(changeerror) <- gene_file[,1]
+
 transfer <- c("T-G","T-C","T-A","G-T","G-C","G-A","C-T","C-G","C-A","A-T","A-G","A-C")
-changeerror <- as.data.frame(cbind(transfer,changeerror))
 codons <- c("AAA","GAA","CAA","TAA","AGA","GGA","CGA","TGA","ACA","GCA","CCA","TCA","ATA","GTA","CTA","TTA","AAG","GAG","CAG","TAG","AGG","GGG","CGG","TGG","ACG","GCG","CCG",
             "TCG","ATG","GTG","CTG","TTG","AAC","GAC","CAC","TAC","AGC","GGC","CGC","TGC","ACC","GCC","CCC","TCC","ATC","GTC","CTC","TTC","AAT","GAT","CAT","TAT","AGT","GGT",
             "CGT","TGT","ACT","GCT","CCT","TCT","ATT","GTT","CTT","TTT")
@@ -812,7 +754,6 @@ for(x in seq(1,length(sam_filelist)))
   sum_total_minus_base <- sum_total_minus_base +total_minus_base 
   sum_errorbase <- mistake_Base[[3]]
   TR_pergene[x,1] <- mistake_Base[[4]]
-  changeerror[,x+1] <- error_trand(sum_errorbase,changeerror,x)
   changecodon[,x] <- codon_matrix(sum_errorbase,changecodon,x,gene_bed_4,exon_start)
   gene_errorloc <- errorloc(sum_errorbase,geneid,exonloc)
   gene_errorloc_list[[x]] <- gene_errorloc
