@@ -102,31 +102,47 @@ dev.off()
 # ----------------------------------------------------------------------------------------- #
 fitness_list <- list.files(pattern = "\\.RData$")
 genename <- c("AGS","AGY","AUS","AUU","AUY","TGS","TGY","TUS","TUU","TUY")
-gene_fitness <- list()
-for(i in seq(1,length(fitness_list)))
+for(k in seq(1,length(fitness_list)))
 {
-  tt <- load(fitness_list[[i]])
-  gene_fitness[[i]] <- count_fitness[ sample(1:length(count_fitness[,1]),100),]
+  load(fitness_list[[k]])
 }
-names(gene_fitness) <- genename
-fitness <- matrix(0,nrow = 100,ncol = 10)
-colnames(fitness) <- genename
-fitness <- as.data.frame(fitness)
-for(i in seq(1,10))
-{
-  tt <- gene_fitness[[i]]
-  fitness[,i] <- tt[,4]-tt[,3]
-}
-fitness_long <- melt(fitness, variable.name = "Gene", value.name = "Fitness")
 
-ggplot(fitness_long, aes(x = factor(Gene, levels = c("TGS","AGS","TUS","AUS","TGY","AGY","TUY","AUY","TUU","AUU")), y = Fitness)) +
-  geom_boxplot() +  
-  geom_jitter(width = 0.2, alpha = 0.5, color = "gray30") +  
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red",linewidth = 0.8) +  
+
+count_fitness_plot <- data.frame(type=c(rep("TGS",nrow(count_fitness_TGS)),rep("AGS",nrow(count_fitness_AGS)),
+                                        rep("TUS",nrow(count_fitness_TUS)),rep("AUS",nrow(count_fitness_AUS)),
+                                        rep("TGY",nrow(count_fitness_TGY)),rep("AGY",nrow(count_fitness_AGY)),
+                                        rep("TUY",nrow(count_fitness_TUY)),rep("AUY",nrow(count_fitness_AUY)),
+                                        rep("TUU",nrow(count_fitness_TUU)),rep("AUU",nrow(count_fitness_AUU))),
+                                 epistasis_e=c(count_fitness_TGS$mean_error_s,count_fitness_AGS$mean_error_s,count_fitness_TUS$mean_error_s,
+                                               count_fitness_AUS$mean_error_s,count_fitness_TGY$mean_error_s,count_fitness_AGY$mean_error_s,
+                                               count_fitness_TUY$mean_error_s,count_fitness_AUY$mean_error_s,count_fitness_TUU$mean_error_s,
+                                               count_fitness_AUU$mean_error_s),
+                                 epistasis_m=c(count_fitness_TGS$mean_mutant_s,count_fitness_AGS$mean_mutant_s,count_fitness_TUS$mean_mutant_s,
+                                               count_fitness_AUS$mean_mutant_s,count_fitness_TGY$mean_mutant_s,count_fitness_AGY$mean_mutant_s,
+                                               count_fitness_TUY$mean_mutant_s,count_fitness_AUY$mean_mutant_s,count_fitness_TUU$mean_mutant_s,
+                                               count_fitness_AUU$mean_mutant_s),
+                                 relative_s=c(count_fitness_TGS$mean_relative_s,count_fitness_AGS$mean_relative_s,count_fitness_TUS$mean_relative_s,
+                                               count_fitness_AUS$mean_relative_s,count_fitness_TGY$mean_relative_s,count_fitness_AGY$mean_relative_s,
+                                               count_fitness_TUY$mean_relative_s,count_fitness_AUY$mean_relative_s,count_fitness_TUU$mean_relative_s,
+                                               count_fitness_AUU$mean_relative_s))
+
+final_plot<- ggplot(count_fitness_plot, aes(x = factor(type, levels = c("TGS", "AGS", "TUS", "AUS", "TGY", "AGY", "TUY", "AUY", "TUU", "AUU")))) +
+  geom_boxplot(aes(y = epistasis_m), fill = NA, color = "black", alpha = 0.5) +  
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red", linewidth = 0.8) +
+  scale_y_continuous(
+    name = "Averaged epistasis of mutant", 
+    limits = c(-1, 1),
+    sec.axis = sec_axis(~ . * (max(count_fitness_plot$epistasis_e) / max(count_fitness_plot$epistasis_m)), name = "Averaged epistasis of error")
+  ) +
   theme_minimal() +
-  labs(title = "", x = "", y = "")+
+  labs(title = "", x = "", y = "Averaged epistasis of mutant") +
   theme(
-    axis.title.x = element_text(size = 16),                
-    axis.text.x = element_blank(),               
-    axis.text.y = element_text(size = 22)                
+    axis.title.y = element_text(size = 25,face = "bold"), 
+    axis.text.x = element_blank(),  
+    axis.text.y = element_text(size = 22,face = "bold"),  
+    axis.title.y.right = element_text(size = 25,face = "bold")  
   )
+final_plot
+pdf("fig4C.pdf", width = 10, height = 7.5);
+final_plot
+dev.off()
