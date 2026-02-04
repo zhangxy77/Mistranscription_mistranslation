@@ -158,88 +158,59 @@ load(dfParamSearch[thisParam,"filename"])
 myF <- dfParamSearch[thisParam,"filename"];
 filename <- myF
 plotname <- paste(filename,".pdf",sep = "")
-cor.test(pop$beta1[1:num_genes],pop$beta2[1:num_genes],method="spearman");
-cor.test(pop$beta1[1:num_genes],pop$beta2[1:num_genes],method="pearson");
-pop %>% 
-  mutate(geneId = rep(1:num_genes,pop_size) ) %>%
-  group_by(geneId) %>%
-  dplyr::summarise(beta1 = mean(beta1),beta2=mean(beta2),N=mean(N)) %>%
-  filter(beta1 > 1e-8, beta2 > 1e-8) %>%
-  cor.test(~ beta1 + beta2, data=., method="spearman")
-cor.test(pop$N[1:num_genes],pop$beta1[1:num_genes],method="spearman");
-cor.test(pop$N[1:num_genes],pop$beta2[1:num_genes],method="spearman");
-exp_pop <- pop[1:num_genes,]
-exp_pop <- exp_pop[order(exp_pop$N,decreasing = T),]
-exp_level <- exp_pop$N[length(exp_pop$N)*0.25]
-exp_pop$exp_type <- ifelse(exp_pop$N>= exp_level ,"high","low")
-exp_pop$exp_type <- ifelse(exp_pop$N>= mean(exp_pop$N) ,"high","low")
-exp_pop_high <- exp_pop[exp_pop$exp_type == "high",]
-exp_pop_low <- exp_pop[exp_pop$exp_type == "low",]
-pop$N_CPM <- (pop$N/sum(pop$N))*1e6
 
-pdf(plotname);
-pop %>% 
-  mutate(geneId = rep(1:num_genes,pop_size) ) %>%
-  group_by(geneId) %>%
-  dplyr::summarise(beta1 = mean(beta1),beta2=mean(beta2),N=mean(N)) %>%
-  ggplot(aes(x=beta1,y=beta2,color=log(N))) +
-  geom_point() +
-  labs(title = myF)+
-  scale_color_distiller(type="div",palette=1) +
-  scale_x_log10() + scale_y_log10()+
-  theme(axis.text= element_text(size = 23, face = "bold"),
-        axis.title= element_text(size = 25, face = "bold"),
-        legend.text = element_text(size = 15, face = "bold"),legend.title = element_text(size = 20, face = "bold"),
-        plot.title = element_text(size = 25, face = "bold"))
-
-pop$log_N <- log(pop$N)
-plot(pop$beta1[1:num_genes],pop$beta2[1:num_genes], cex.lab = 2, cex.axis = 1.5, cex.main = 2,font.lab = 2,font.axis = 2,font.main = 2);
-plot(log(pop$N_CPM[1:num_genes], base = 10),pop$beta1[1:num_genes],xlab = "Expression", ylab = "Mistranscription rate", cex.lab = 2, cex.axis = 1.5, cex.main = 2,font.lab = 2,font.axis = 2,font.main = 2);
-plot(log(pop$N_CPM[1:num_genes], base = 10),pop$beta2[1:num_genes], xlab = "Expression", ylab = "Mistranslation rate",cex.lab = 2, cex.axis = 1.5, cex.main = 2,font.lab = 2,font.axis = 2,font.main = 2);
-# expression
-ggplot(pop[1:num_genes, ], aes(x = N_CPM, y = beta1)) +
-  geom_point(shape = 1,size=2)  +
-  scale_x_continuous(trans = 'log10') +
+#B
+relative_fitness <- c_fitness$relative_fitness[seq(30000,50000)]
+plot(1:length(relative_fitness_500),unlist(relative_fitness_500),type="l", xlab = "Generation", ylab = "Fitness",cex.lab = 2, cex.axis = 1.5, cex.main = 2,font.lab = 2,font.axis = 2,font.main = 2)
+plot_data <- data.frame(
+  Generation = seq(0,20000,by=500),
+  Fitness = unlist(relative_fitness_500)
+)
+pdf("B.pdf");
+plot(1:length(c_fitness$fitness),unlist(c_fitness$fitness),type="l", xlab = "Generation", ylab = "Fitness",cex.lab = 2, cex.axis = 1.5, cex.main = 2,font.lab = 2,font.axis = 2,font.main = 2)
+ggplot(plot_data, aes(x = Generation, y = Fitness)) +
+  geom_line(linewidth = 0.5) +
   scale_y_continuous(
-    labels = c(expression(italic(0)),   
-               expression(0.5),   
-               expression(1.0),   
-               expression(1.5),
-               expression(2.0)),   
-    expand = c(0, 0),   
-    breaks = c(0, 0.000005, 0.000010, 0.000015, 0.000020),   
-    limits = c(-0.000001, 0.000025)
+    breaks = c(0.98,0.99, 1.0,1.01, 1.02),
+    limits = c(0.98, 1.02)
   ) +
-  labs(x = "Expression (CPM)", y = "Mistranscription rate") +
+  labs(x = "Generation", y = "Relative fitness") +
   theme_bw() +
   theme(
-    axis.title = element_text(size = 25, face = "bold"),
-    axis.text = element_text(size = 23, face = "bold"),
-    plot.title = element_text(size = 20, face = "bold"),
-    panel.grid = element_blank()  
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 18, face = "bold"),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank() 
   )
-ggplot(pop[1:num_genes, ], aes(x = N_CPM, y = beta2)) +
-  geom_point(shape = 1,size=2) +
-  scale_x_continuous(trans = 'log10') +
-  scale_y_continuous(labels = c(expression(italic(0)),   
-                                expression(2.0),   
-                                expression(4.0),   
-                                expression(6.0)),   
-                     expand = c(0, 0),   
-                     breaks = c(0, 0.0002, 0.0004, 0.0006),   
-                     limits = c(-0.00001, 0.00065)) +
-  labs(x = "Expression (CPM)", y = "Mistranslation rate") +
-  theme_bw() + 
+dev.off()
+
+#E
+relative_cor <- c_fitness$cor[seq(30000,50000)]
+relative_cor_500 <- relative_cor[seq(1, length(relative_cor), by = 500)]
+pdf("E.pdf");
+plot_data <- data.frame(
+  Generation = seq(0,20000, by = 500),
+  cor = relative_cor_500
+)
+ggplot(plot_data, aes(x = Generation, y = cor)) +
+  geom_line(linewidth = 0.65) +
+  scale_y_continuous(
+    breaks = c(-0.16,-0.12,-0.08),
+    limits = c(-0.175, -0.065)
+    ) +
+  labs(x = "Generation", y = "Mistranscription-Mistranslation\ncorrelation") +
+  theme_bw() +
   theme(
-    axis.title = element_text(size = 25, face = "bold"),
-    axis.text = element_text(size = 23,face = "bold"),
-    plot.title = element_text(size = 20, face = "bold"),
-    panel.grid = element_blank()
+    axis.title = element_text(size = 24, face = "bold"),
+    axis.text = element_text(size = 18, face = "bold"),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank() 
   )
 
-plot(1:length(trackFitness),unlist(trackFitness),type="l", xlab = "Generation", ylab = "Fitness",cex.lab = 2, cex.axis = 1.5, cex.main = 2,font.lab = 2,font.axis = 2,font.main = 2);
-plot(1:length(trackCor),unlist(trackCor),type="l", xlab = "Generation", ylab = "Correlation",cex.lab = 2, cex.axis = 1.5, cex.main = 2,font.lab = 2,font.axis = 2,font.main = 2);
-#expression
+dev.off()
+
+#J
 percent_thresholds <- c(0.01, 0.05, 0.1, 0.2, 0.5, 1.0)
 result_total <- data.frame(Percent = percent_thresholds, RealCorrelation = NA, RandomCorrelation = NA,sd_real= NA,sd_random=NA)
 results <- data.frame(Percent = percent_thresholds, RealCorrelation = NA, RandomCorrelation = NA)
@@ -250,12 +221,11 @@ real_random_20 <- data.frame(real=rep(0,1000),random=rep(0,1000))
 real_random_50 <- data.frame(real=rep(0,1000),random=rep(0,1000))
 real_random_100 <- data.frame(real=rep(0,1000),random=rep(0,1000))
 t <- 1
-for(i in seq(1,length(pop[,1]),500))
+for(i in seq(1,length(pop[,1]),200))
 {
   end <- i+num_genes-1 
   exp_pop <- pop[i:end,]
   exp_pop <- exp_pop[order(exp_pop$N,decreasing = T),]
- 
   for (threshold in percent_thresholds) {
     exp_level <- quantile(exp_pop$N, 1 - threshold)
     
@@ -290,10 +260,10 @@ result_total[4,2] <- mean(real_random_20[,1]);result_total[4,3] <- mean(real_ran
 result_total[5,2] <- mean(real_random_50[,1]);result_total[5,3] <- mean(real_random_50[,2]);result_total[5,4] <- sd(real_random_50[,1]);result_total[5,5] <- sd(real_random_50[,2])
 result_total[6,2] <- mean(real_random_100[,1]);result_total[6,3] <- mean(real_random_100[,2]);result_total[6,4] <- sd(real_random_100[,1]);result_total[6,5] <- sd(real_random_100[,2])
 
-result_long <- melt(result_total, id.vars = "Percent", measure.vars = c("RealCorrelation", "RandomCorrelation"))
+result_long <- reshape2::melt(result_total, id.vars = "Percent", measure.vars = c("RealCorrelation", "RandomCorrelation"))
 
-
-
+plotname <- "L.pdf"
+pdf(plotname,width = 8,height = 8)  
 ggplot(result_long, aes(x = factor(Percent, levels = unique(result_total$Percent)), 
                         y = value, fill = variable)) +
   geom_bar(stat = "identity", position = position_dodge(), width = 0.7) +
@@ -306,37 +276,36 @@ ggplot(result_long, aes(x = factor(Percent, levels = unique(result_total$Percent
                 position = position_dodge(0.7), width = 0.2) +
   geom_hline(yintercept = 0, color = "black") +
   scale_fill_manual(values = c("gray30", "gray60"), 
-                    labels = c("real", "random"),
+                    labels = c("Real", "Random"),
                     name = "") +
-  scale_y_continuous(limits = c(-0.7, 0.6), 
-                     breaks = seq(-0.7, 0.6, by = 0.1),
+  scale_y_continuous(limits = c(-0.3, 0.23), 
+                     breaks = seq(-0.3, 0.23, by = 0.1),
                      labels = label_number(accuracy = 0.1)) + 
   scale_x_discrete(labels = c("0.01" = "1%", "0.05" = "5%", "0.1" = "10%", "0.2" = "20%", "0.5" = "50%", "1" = "100%")) +
   labs(x = "High expression Genes", y = "Correlation", title = "") +
   theme_minimal() +
   theme(legend.position = "right",
-        legend.text = element_text(size = 20, face = "bold"), 
+        legend.text = element_text(size = 20, face = "bold"),  
         axis.title = element_text(size = 25, face = "bold"), 
-        axis.text = element_text(size = 23, face = "bold"),
+        axis.text = element_text(size = 23, face = "bold"), 
         plot.title = element_text(size = 25, face = "bold"))
 
 dev.off();
 
+#C-D
 beta_plot<- pop %>% 
   mutate(geneId = rep(1:num_genes,pop_size) ) %>%
   group_by(geneId) %>%
   dplyr::summarise(beta1 = mean(beta1),beta2=mean(beta2),N=mean(N)) 
 beta_p1 <- ggplot(beta_plot,aes(y = reorder(geneId, beta1),x=beta1))+ 
   geom_point(size = 1)+  # Increase the size of the points 
-  scale_x_continuous(labels = c(expression(italic(0)), 
-                                expression(0.5), 
-                                expression(1.0), 
-                                expression(1.5),
-                                expression(2.0),
-                                expression(2.5)),
+  scale_x_continuous(labels = c(expression(1.20),
+                                expression(1.35),
+                                expression(1.50),
+                                expression(1.65)),
                      expand = c(0,0), 
-                     breaks = c(0,0.000005,0.00001,0.000015,0.00002,0.000025), 
-                     limits = c(0,0.000025)) +
+                     breaks = c(0.000012,0.0000135, 0.000015,0.0000165), 
+                     limits = c(0.0000118, 0.000017)) +
   labs(x = "", y = "", title = "")+
   theme(axis.title.x = element_text(size=30, margin = margin(r = 20)), 
         axis.text.x = element_text(size = 23,face = "bold"), 
@@ -345,18 +314,16 @@ beta_p1 <- ggplot(beta_plot,aes(y = reorder(geneId, beta1),x=beta1))+
         axis.text.y = element_blank(),
         plot.title = element_blank(),
         panel.grid.major = element_line(color = "grey93"))+
-  coord_cartesian(clip = "off")mean
+  coord_cartesian(clip = "off")
 
 beta_p2 <- ggplot(beta_plot,aes(y = reorder(geneId, beta2),x=beta2))+ 
   geom_point(size = 1)+  # Increase the size of the points 
-  scale_x_continuous(labels = c(expression(italic(0)), 
-                                expression(2), 
-                                expression(4), 
+  scale_x_continuous(labels = c(expression(italic(4)),   
                                 expression(6),
-                                expression(8)), 
-                     expand = c(0,0), 
-                     breaks = c(0,0.0002,0.0004,0.0006,0.0008), 
-                     limits = c(0,0.0008))+
+                                expression(8)),   
+                     expand = c(0, 0),   
+                     breaks = c(0.0004, 0.0006, 0.0008),   
+                     limits = c(0.00038, 0.00082))+
   labs(x = "", y = "", title = "")+
   theme(axis.title.x = element_text(size=30, margin = margin(r = 20)), 
         axis.text.x = element_text(size = 23, face = "bold"), 
@@ -367,9 +334,9 @@ beta_p2 <- ggplot(beta_plot,aes(y = reorder(geneId, beta2),x=beta2))+
         panel.grid.major = element_line(color = "grey93"))+
   coord_cartesian(clip = "off")
 
-pdf("beta1.pdf")
+pdf("beta1.pdf");
 ggMarginal(beta_p1, type="histogram", fill = "grey48", xparams = list(bins=40), yparams = list(bins=40))
-dev.off()
-pdf("beta2.pdf")
+dev.off();
+pdf("beta2.pdf");
 ggMarginal(beta_p2, type="histogram", fill = "grey48", xparams = list(bins=40), yparams = list(bins=40))
 dev.off()
