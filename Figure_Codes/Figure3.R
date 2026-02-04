@@ -311,50 +311,44 @@ bar_100plot_00
 # ----------------------------------------------------------------------------------------- #
 #                                             figure3. F                                    #
 # ----------------------------------------------------------------------------------------- #
-##PLOT-bar-100
-OR_m_100 <- list(OR_H_m_100,OR_Y_2_m_100,OR_M_2_m_100,OR_C_m_100,OR_D_m_100)
-OR_m_100_plot <- data.frame(Species=c("Human","Yeast","Mouse","C.elegans","Drosophila"),
-                            logOR=0,pvalue=0,CI_low=0,CI_high=0)
-for(i in seq(1,length(OR_m_100)))
+OR_bootstap <- list(t_test_result_OR_two_human,t_test_result_OR_two_yeast,t_test_result_OR_two_mouse,t_test_result_OR_two_drosophila,t_test_result_OR_two_elegans,t_test_result_MH_TR)
+OR_bootstap_data <- data.frame(Species=c("Human","Yeast","Mouse","C.elegans","Drosophila","Combined"),
+                               logOR=0,pvalue=0,CI_low=0,CI_high=0)
+for(i in seq(1,length(OR_bootstap)))
 {
-  OR_m_100_plot[i,2] <- log(OR_m_100[[i]]$measure[[2]])
-  OR_m_100_plot[i,3] <- OR_m_100[[i]]$p.value[[4]]
-  OR_m_100_plot[i,4] <- log(OR_m_100[[i]]$measure[[4]])
-  OR_m_100_plot[i,5] <- log(OR_m_100[[i]]$measure[[6]])
+  OR_bootstap_data[i,2] <- log(OR_bootstap[[i]]$estimate[[1]])
+  OR_bootstap_data[i,3] <- OR_bootstap[[i]]$p.value[[1]]
+  OR_bootstap_data[i,4] <- log(OR_bootstap[[i]]$conf.int[[1]])
+  OR_bootstap_data[i,5] <- log(OR_bootstap[[i]]$conf.int[[2]])
 }
-OR_m_100_plot$pSig <- 0
-for(i in seq(1,length(OR_m_100)))
-{
-  if(OR_m_100_plot[i,3] < 0.001){OR_m_100_plot[i,6] <- 0.001}
-  if(OR_m_100_plot[i,3] > 0.001 && OR_m_100_plot[i,3] < 0.01){OR_m_100_plot[i,6] <- 0.01}
-  if(OR_m_100_plot[i,3] > 0.01 &&OR_m_100_plot[i,3] < 0.05){OR_m_100_plot[i,6] <- 0.05}
-}
-OR_m_100_plot$Species <- factor(OR_m_100_plot$Species, 
-                                levels = c("Human", "Mouse", "Drosophila", "C.elegans", "Yeast"),
-                                labels = c("*H. sapiens*", "*M. musculus*", "*D. melanogaster*", 
-                                           "*C. elegans*", "*S. cerevisiae*"))
-OR_100_plot <- ggplot(OR_m_100_plot, aes(x = logOR, y = Species)) +
-  geom_bar(stat = "identity", fill = "white", color = "grey35", width = 0.6, position = position_dodge(0.8)) +
+OR_bootstap_data$Species <- factor(OR_bootstap_data$Species, 
+                                         levels = c("Human", "Mouse", "Drosophila", "C.elegans", "Yeast","Combined"),  # 按所需顺序排列
+                                         labels = c("*H. sapiens*", "*M. musculus*", "*D. melanogaster*", 
+                                                    "*C. elegans*", "*S. cerevisiae*","Combined"))
+OR_bootstap_plot <- ggplot(OR_bootstap_data, aes(x = logOR, y = Species)) +
+  geom_bar(stat = "identity", fill = "white", color = "grey35", width = 0.6, position = position_dodge(0.8),linewidth = 1.5) +
   geom_errorbar(aes(xmin = CI_low, xmax = CI_high), width = 0.2, color = "black", position = position_dodge(0.8), linewidth = 1.5) +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "black",linewidth = 1) +
-  scale_y_discrete(position = "left") + # Move y-axis to the left
-  scale_x_continuous(labels = c(expression(10),
-                                expression(1),   
-                                expression(0.01),
-                                expression("0.0001"),
-                                expression("0.000001")),   
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black",linewidth = 1.5)  +
+  scale_y_discrete(position = "left") +
+  scale_x_continuous(labels=c(expression(10), 
+                              expression(1),
+                              expression(10^-1),
+                              expression(10^-2),
+                              expression(10^-3),
+                              expression(10^-4)),   
                      expand = c(0, 0),   
-                     breaks = c(1,0,-2,-4,-6),   
-                     limits = c(-6.5, 1.5))+
-  labs(title = "", x = "Odds Ratio", y = "Species") +
+                     breaks = c(1,0,-1,-2,-3,-4),   
+                     limits = c(-4.5, 1.5)) +
+  labs(title = "", x = "Odds ratio", y = "Species") +
   theme_bw(base_size = 16) +
   theme_classic() +
   theme(
-    axis.text.x = element_text(size = 28), 
-    axis.title.y = element_text(size = 35, margin = margin(r = 20)), 
-    axis.title.x = element_text(size = 35), 
-    axis.text.y = element_markdown(size = 30),
-    plot.title = element_text(size = 30, face = "bold", hjust = 0.5)
+    axis.text.x = element_text(size = 28,face = "bold"), 
+    axis.title.y = element_text(size = 35, face = "bold",margin = margin(r = 20)), 
+    axis.title.x = element_text(size = 35,face = "bold"), 
+    axis.text.y = element_markdown(size = 30,face = "bold")
   )
-
-OR_100_plot
+OR_bootstap_plot
+png("OR_00.png",width = 1500,height = 1000, res = 150)
+OR_bootstap_plot
+dev.off()
