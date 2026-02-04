@@ -109,7 +109,6 @@ pdf(plotname)
 allCor %>%
   ggplot(aes(fill=fracCorNeg, x=as.factor(mut_rate), y=as.factor(param_c))) +
   geom_tile() +
-  geom_text(aes(label=Frac_p_text), col ="black", size = 7) +
   labs(title = "", x = "Per-generation probability of error rate changes", y = "Toxicity coefficient of erroneous molecules", 
        fill = "Fraction of samples with negative \nmistranscription-mistranslation correlation") +
   scale_fill_distiller(type="div", palette = "RdYlBu", limits = c(0, 1)) +
@@ -133,7 +132,6 @@ allCor %>%
 allCor %>%
   ggplot(aes(fill=r, x=as.factor(mut_rate),y=as.factor(param_c))) +
   geom_tile() +
-  geom_text(aes(label=r_p_text),col ="black",size = 7)+
   labs(title = "", x = "Per-generation probability of error rate changes", y = "Toxicity coefficient of erroneous molecules", 
        fill = "Averaged mistranscription-mistranslation correlation") +
   scale_fill_distiller(type="div",palette = "RdYlBu", limits=c(-0.13, 0.13))+
