@@ -95,10 +95,8 @@ for(i in seq(1,length(gene)))
   spec_genedata[i,3] <- pergene_TL[loc_2,4]
   spec_genedata[i,4] <- as.numeric(spec_genedata[i,2]/spec_genedata[i,3])
 }
-# 标记转录错误率高于翻译错误率的基因
 spec_genedata$type <- ifelse(spec_genedata$frac_TR_TL > 1, "Transcription Error rate > Translation Error rate", "Transcription Error rate < Translation Error rate")
 
-# 计算 y 轴的绝对值和方向
 spec_genedata$frac_TR_TL_adjusted <- ifelse(spec_genedata$frac_TR_TL < 1, 
                                             -abs(spec_genedata$frac_TR_TL - 1), 
                                             abs(spec_genedata$frac_TR_TL - 1))
